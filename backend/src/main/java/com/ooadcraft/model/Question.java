@@ -1,5 +1,6 @@
 package com.ooadcraft.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
@@ -12,6 +13,7 @@ public class Question {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "quiz_id", nullable = false)
+    @JsonIgnoreProperties("questions")
     private Quiz quiz;
 
     @Column(columnDefinition = "TEXT", nullable = false)
@@ -48,6 +50,10 @@ public class Question {
 
     public Quiz getQuiz() {
         return quiz;
+    }
+
+    public Long getQuizId() {
+        return quiz != null ? quiz.getId() : null;
     }
 
     public void setQuiz(Quiz quiz) {

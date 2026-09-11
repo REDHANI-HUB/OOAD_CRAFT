@@ -152,75 +152,82 @@ export const LearningModulesPage: React.FC = () => {
           </div>
 
           <div className="space-y-6">
-            {modules.map((m) => (
-              <div
-                key={m.id}
-                className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4 hover:border-indigo-500/40 transition"
-              >
-                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
-                  <div className="space-y-1">
-                    <div className="flex items-center space-x-2">
-                      <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
-                        Module {m.orderIndex}
-                      </span>
-                      <span
-                        className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
-                          m.difficultyTier === 'BASICS'
-                            ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
-                            : m.difficultyTier === 'MEDIUM'
-                            ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
-                            : 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
-                        }`}
-                      >
-                        {m.difficultyTier}
-                      </span>
+            {modules.map((m) => {
+              const tier = (m.difficultyTier || (m as any).tierLevel || 'BASICS').toUpperCase();
+              const lessonsToDisplay = (m.lessons && m.lessons.length > 0)
+                ? m.lessons
+                : (DEFAULT_MODULES.find(dm => dm.id === m.id || dm.orderIndex === m.orderIndex)?.lessons || []);
+
+              return (
+                <div
+                  key={m.id}
+                  className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-4 hover:border-indigo-500/40 transition"
+                >
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 dark:border-slate-800 pb-4">
+                    <div className="space-y-1">
+                      <div className="flex items-center space-x-2">
+                        <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+                          Module {m.orderIndex}
+                        </span>
+                        <span
+                          className={`px-2.5 py-0.5 rounded-full text-[10px] font-extrabold ${
+                            tier === 'BASICS'
+                              ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                              : tier === 'MEDIUM'
+                              ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
+                              : 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
+                          }`}
+                        >
+                          {tier}
+                        </span>
+                      </div>
+                      <h2 className="text-xl font-bold text-slate-900 dark:text-white">{m.title}</h2>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">{m.description}</p>
                     </div>
-                    <h2 className="text-xl font-bold text-slate-900 dark:text-white">{m.title}</h2>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">{m.description}</p>
+
+                    <Link
+                      to={`/quizzes/module/${m.id}`}
+                      className="px-4 py-2 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-600 dark:text-indigo-400 rounded-xl font-bold text-xs flex items-center space-x-1.5 shrink-0 transition"
+                    >
+                      <Award className="w-4 h-4" />
+                      <span>Take Module Quiz</span>
+                    </Link>
                   </div>
 
-                  <Link
-                    to={`/quizzes/module/${m.id}`}
-                    className="px-4 py-2 bg-indigo-50 dark:bg-indigo-950/60 hover:bg-indigo-100 text-indigo-600 dark:text-indigo-400 rounded-xl font-bold text-xs flex items-center space-x-1.5 shrink-0 transition"
-                  >
-                    <Award className="w-4 h-4" />
-                    <span>Take Module Quiz</span>
-                  </Link>
-                </div>
-
-                {/* Lessons List inside Module */}
-                <div className="space-y-2">
-                  {m.lessons && m.lessons.length > 0 ? (
-                    m.lessons.map((les) => (
-                      <Link
-                        key={les.id}
-                        to={`/lessons/${les.id}`}
-                        className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 hover:bg-indigo-50/50 dark:hover:bg-slate-800 transition group border border-transparent hover:border-indigo-500/20"
-                      >
-                        <div className="flex items-center space-x-3">
-                          <div className="w-8 h-8 rounded-xl bg-indigo-600/10 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center text-xs">
-                            {les.orderIndex}
-                          </div>
-                          <div>
-                            <div className="font-semibold text-sm text-slate-900 dark:text-white group-hover:text-indigo-600 transition">
-                              {les.title}
+                  {/* Lessons List inside Module */}
+                  <div className="space-y-2">
+                    {lessonsToDisplay.length > 0 ? (
+                      lessonsToDisplay.map((les) => (
+                        <Link
+                          key={les.id}
+                          to={`/lessons/${les.id}`}
+                          className="flex items-center justify-between p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-900/60 hover:bg-indigo-50/50 dark:hover:bg-slate-800 transition group border border-transparent hover:border-indigo-500/20"
+                        >
+                          <div className="flex items-center space-x-3">
+                            <div className="w-8 h-8 rounded-xl bg-indigo-600/10 text-indigo-600 dark:text-indigo-400 font-bold flex items-center justify-center text-xs">
+                              {les.orderIndex}
                             </div>
-                            <div className="text-xs text-slate-400">{les.description}</div>
+                            <div>
+                              <div className="font-semibold text-sm text-slate-900 dark:text-white group-hover:text-indigo-600 transition">
+                                {les.title}
+                              </div>
+                              <div className="text-xs text-slate-400">{les.description}</div>
+                            </div>
                           </div>
-                        </div>
 
-                        <div className="flex items-center space-x-3 text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                          <span>+{les.xpReward} XP</span>
-                          <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
-                        </div>
-                      </Link>
-                    ))
-                  ) : (
-                    <div className="text-xs text-slate-400 py-2 italic">Lessons loading...</div>
-                  )}
+                          <div className="flex items-center space-x-3 text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                            <span>+{les.xpReward} XP</span>
+                            <ChevronRight className="w-4 h-4 text-slate-400 group-hover:translate-x-1 transition-transform" />
+                          </div>
+                        </Link>
+                      ))
+                    ) : (
+                      <div className="text-xs text-slate-400 py-2 italic">No lessons available.</div>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </main>
       </div>

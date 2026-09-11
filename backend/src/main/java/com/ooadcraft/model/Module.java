@@ -71,6 +71,10 @@ public class Module {
         return tierLevel;
     }
 
+    public String getDifficultyTier() {
+        return tierLevel;
+    }
+
     public void setTierLevel(String tierLevel) {
         this.tierLevel = tierLevel;
     }

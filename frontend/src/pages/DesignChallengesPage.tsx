@@ -54,10 +54,12 @@ export const DesignChallengesPage: React.FC = () => {
       .catch(console.error);
   }, []);
 
+  const currentChallenge = activeChallenge || challenges[0] || DEFAULT_CHALLENGES[0];
+
   const handleSubmit = async () => {
-    if (!activeChallenge) return;
+    if (!currentChallenge) return;
     try {
-      await challengeApi.submit(activeChallenge.id, solution);
+      await challengeApi.submit(currentChallenge.id, solution);
     } catch {}
     setSuccess(true);
     setTimeout(() => setSuccess(false), 4000);
@@ -90,7 +92,7 @@ export const DesignChallengesPage: React.FC = () => {
                     setSuccess(false);
                   }}
                   className={`w-full text-left p-4 rounded-2xl border transition-all ${
-                    activeChallenge?.id === c.id
+                    currentChallenge?.id === c.id
                       ? 'bg-indigo-600 border-indigo-600 text-white shadow-lg'
                       : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-800 text-slate-800 dark:text-slate-200 hover:border-indigo-500/40'
                   }`}
@@ -105,27 +107,27 @@ export const DesignChallengesPage: React.FC = () => {
             </div>
 
             {/* Challenge Execution Workspace */}
-            {activeChallenge && (
+            {currentChallenge && (
               <div className="lg:col-span-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 shadow-sm space-y-6">
                 <div className="space-y-2 border-b border-slate-100 dark:border-slate-800 pb-4">
                   <div className="flex items-center justify-between">
-                    <h2 className="text-2xl font-black text-slate-900 dark:text-white">{activeChallenge.title}</h2>
+                    <h2 className="text-2xl font-black text-slate-900 dark:text-white">{currentChallenge.title}</h2>
                     <span className="px-3 py-1 bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 font-extrabold text-xs rounded-full">
-                      +{activeChallenge.xpReward} XP
+                      +{currentChallenge.xpReward} XP
                     </span>
                   </div>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">{activeChallenge.description}</p>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{currentChallenge.description}</p>
                 </div>
 
                 <div className="bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-800 p-4 rounded-2xl font-mono text-xs text-slate-700 dark:text-slate-300 space-y-2">
                   <div className="font-bold text-indigo-500 uppercase tracking-wider">// Scenario Code Smell Problem</div>
-                  <div>{activeChallenge.scenarioText}</div>
+                  <div>{currentChallenge.scenarioText}</div>
                 </div>
 
                 {success && (
                   <div className="p-4 bg-emerald-950/40 border border-emerald-800 text-emerald-300 rounded-2xl text-xs font-bold flex items-center space-x-2">
                     <CheckCircle2 className="w-5 h-5 text-emerald-400" />
-                    <span>Challenge solved successfully! +{activeChallenge.xpReward} XP added to your profile!</span>
+                    <span>Challenge solved successfully! +{currentChallenge.xpReward} XP added to your profile!</span>
                   </div>
                 )}
 

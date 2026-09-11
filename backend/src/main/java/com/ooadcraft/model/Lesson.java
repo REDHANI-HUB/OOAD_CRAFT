@@ -1,5 +1,6 @@
 package com.ooadcraft.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import jakarta.persistence.*;
 
 @Entity
@@ -12,6 +13,7 @@ public class Lesson {
 
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "module_id", nullable = false)
+    @JsonIgnoreProperties("lessons")
     private Module module;
 
     @Column(nullable = false)
@@ -51,6 +53,10 @@ public class Lesson {
 
     public Module getModule() {
         return module;
+    }
+
+    public Long getModuleId() {
+        return module != null ? module.getId() : null;
     }
 
     public void setModule(Module module) {
