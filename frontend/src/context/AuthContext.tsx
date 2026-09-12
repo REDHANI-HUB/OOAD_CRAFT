@@ -51,17 +51,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const res = await authApi.login(credentials);
       setUser(res.user);
-    } catch {
-      localStorage.setItem('jwt_token', 'demo_jwt_token_123');
-      setUser({
-        id: 1,
-        email: credentials.email || 'student@ooadcraft.edu',
-        name: credentials.email ? credentials.email.split('@')[0] : 'Student Architect',
-        university: 'State University',
-        department: 'Computer Science',
-        batchYear: 2026,
-        role: 'ROLE_STUDENT',
-      });
+    } catch (err: any) {
+      if (!err.response) {
+        throw new Error('Backend API server is unreachable. Ensure your Spring Boot backend & MySQL DB are running.');
+      }
+      throw err;
     }
   };
 
@@ -69,17 +63,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const res = await authApi.register(data);
       setUser(res.user);
-    } catch {
-      localStorage.setItem('jwt_token', 'demo_jwt_token_123');
-      setUser({
-        id: 1,
-        email: data.email || 'student@ooadcraft.edu',
-        name: data.name || 'Student Architect',
-        university: data.university || 'State University',
-        department: data.department || 'Computer Science',
-        batchYear: data.batchYear || 2026,
-        role: 'ROLE_STUDENT',
-      });
+    } catch (err: any) {
+      if (!err.response) {
+        throw new Error('Backend API server is unreachable. Ensure your Spring Boot backend & MySQL DB are running.');
+      }
+      throw err;
     }
   };
 

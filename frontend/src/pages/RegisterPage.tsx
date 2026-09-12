@@ -24,7 +24,7 @@ export const RegisterPage: React.FC = () => {
       await register({ name, email, password, university, department, batchYear: Number(batchYear) });
       navigate('/dashboard');
     } catch (err: any) {
-      setError(err.response?.data?.message || 'Registration failed');
+      setError(err.response?.data?.message || err.message || 'Registration failed');
     } finally {
       setLoading(false);
     }
