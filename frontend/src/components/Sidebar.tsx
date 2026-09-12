@@ -40,7 +40,7 @@ const navItems = [
 
 export const Sidebar: React.FC = () => {
   return (
-    <aside className="hidden md:flex w-64 shrink-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 min-h-[calc(100vh-4rem)] p-4 flex-col justify-between transition-colors">
+    <aside className="hidden md:flex w-64 shrink-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 sticky top-16 h-[calc(100vh-4rem)] p-4 flex-col justify-between transition-colors overflow-y-auto scrollbar-thin">
       <div className="space-y-1">
         <div className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
           Core Platform
