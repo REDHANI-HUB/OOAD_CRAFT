@@ -2,7 +2,7 @@ import axios from 'axios';
 
 const getBaseUrl = () => {
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
-    return 'https://types-menu-reasons-butterfly.trycloudflare.com/api';
+    return 'https://ooadcraft-backend.onrender.com/api';
   }
   const envUrl = import.meta.env.VITE_API_URL;
   if (envUrl) return envUrl;
