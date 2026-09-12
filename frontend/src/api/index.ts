@@ -80,6 +80,10 @@ export const quizApi = {
     const res = await api.post(`/quizzes/${id}/submit`, request);
     return res.data;
   },
+  createQuiz: async (quizData: any): Promise<Quiz> => {
+    const res = await api.post('/quizzes/create', quizData);
+    return res.data;
+  },
 };
 
 export const umlApi = {

@@ -34,6 +34,27 @@ public class QuizController {
         return ResponseEntity.ok(quizService.getQuizByModuleId(moduleId));
     }
 
+    @Autowired
+    private com.ooadcraft.repository.UserRepository userRepository;
+
+    @PostMapping("/create")
+    public ResponseEntity<?> createQuiz(@RequestBody Quiz quiz) {
+        Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+        if (auth == null || !auth.isAuthenticated() || auth.getPrincipal().equals("anonymousUser")) {
+            return ResponseEntity.status(401).body("Authentication required");
+        }
+        com.ooadcraft.model.User user = userRepository.findByEmail(auth.getName()).orElse(null);
+        if (user == null) {
+            return ResponseEntity.status(401).body("User not found");
+        }
+        String role = user.getRole() != null ? user.getRole().toUpperCase() : "";
+        if (!role.contains("STAFF") && !role.contains("PROFESSOR") && !role.contains("TEACHER") && !role.contains("ADMIN")) {
+            return ResponseEntity.status(403).body("Only Staff/Faculty members are authorized to create quizzes");
+        }
+        Quiz created = quizService.createQuiz(quiz);
+        return ResponseEntity.ok(created);
+    }
+
     @PostMapping("/{id}/submit")
     public ResponseEntity<QuizSubmitResponse> submitQuiz(@PathVariable Long id, @RequestBody QuizSubmitRequest request) {
         Authentication auth = SecurityContextHolder.getContext().getAuthentication();

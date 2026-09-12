@@ -90,4 +90,16 @@ public class QuizService {
 
         return new QuizSubmitResponse(score, passed, questions.size(), correctCount, xpEarned, explanations);
     }
+
+    @Transactional
+    public Quiz createQuiz(Quiz quiz) {
+        Quiz saved = quizRepository.save(quiz);
+        if (quiz.getQuestions() != null) {
+            for (Question q : quiz.getQuestions()) {
+                q.setQuiz(saved);
+                questionRepository.save(q);
+            }
+        }
+        return saved;
+    }
 }

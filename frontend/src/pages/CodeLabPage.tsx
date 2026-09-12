@@ -24,9 +24,56 @@ export const CodeLabPage: React.FC = () => {
   const [copied, setCopied] = useState(false);
 
   const handleConvert = () => {
-    setGeneratedUml(
-      `class Student {\n  - id: Long\n  - name: String\n  - university: String\n  + enrollCourse(courseName: String): void\n}`
-    );
+    if (!inputCode || !inputCode.trim()) {
+      setGeneratedUml('// Please enter Java or C++ source code above.');
+      return;
+    }
+
+    const lines = inputCode.split('\n');
+    let className = 'Class';
+    const fields: string[] = [];
+    const methods: string[] = [];
+
+    lines.forEach((line) => {
+      const trimmed = line.trim();
+
+      const classMatch = trimmed.match(/(?:public|protected|private)?\s*class\s+([A-Za-z0-9_]+)/);
+      if (classMatch) {
+        className = classMatch[1];
+      }
+
+      const fieldMatch = trimmed.match(/(private|protected|public)\s+([A-Za-z0-9_<>]+)\s+([A-Za-z0-9_]+)\s*;/);
+      if (fieldMatch) {
+        const vis = fieldMatch[1] === 'private' ? '-' : fieldMatch[1] === 'protected' ? '#' : '+';
+        const type = fieldMatch[2];
+        const name = fieldMatch[3];
+        fields.push(`  ${vis} ${name}: ${type}`);
+      }
+
+      const methodMatch = trimmed.match(/(public|protected|private)\s+([A-Za-z0-9_<>]+)\s+([A-Za-z0-9_]+)\s*\(([^)]*)\)/);
+      if (methodMatch) {
+        const vis = methodMatch[1] === 'private' ? '-' : methodMatch[1] === 'protected' ? '#' : '+';
+        const retType = methodMatch[2];
+        const methodName = methodMatch[3];
+        const params = methodMatch[4];
+        methods.push(`  ${vis} ${methodName}(${params}): ${retType}`);
+      }
+    });
+
+    let uml = `class ${className} {\n`;
+    if (fields.length > 0) {
+      uml += fields.join('\n') + '\n';
+    }
+    if (methods.length > 0) {
+      if (fields.length > 0) uml += '  --\n';
+      uml += methods.join('\n') + '\n';
+    }
+    if (fields.length === 0 && methods.length === 0) {
+      uml += `  // Dynamic Class Notation\n  + process(): void\n`;
+    }
+    uml += '}';
+
+    setGeneratedUml(uml);
   };
 
   const handleCopy = () => {
@@ -57,7 +104,7 @@ export const CodeLabPage: React.FC = () => {
                 <span className="text-xs font-bold uppercase tracking-wider text-slate-400">Java / C++ Source Code</span>
                 <button
                   onClick={handleConvert}
-                  className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition"
+                  className="px-3.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-xl text-xs font-bold flex items-center space-x-1.5 transition shadow-lg shadow-indigo-500/20"
                 >
                   <RefreshCw className="w-3.5 h-3.5" />
                   <span>Generate UML</span>

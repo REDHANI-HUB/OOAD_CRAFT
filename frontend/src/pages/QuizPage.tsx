@@ -4,8 +4,9 @@ import { Navbar } from '../components/Navbar';
 import { Sidebar } from '../components/Sidebar';
 import { Footer } from '../components/Footer';
 import { quizApi } from '../api';
+import { useAuth } from '../context/AuthContext';
 import { Quiz, QuizSubmitResponse } from '../types';
-import { Award, CheckCircle2, XCircle, ArrowLeft, RotateCcw, Zap } from 'lucide-react';
+import { Award, CheckCircle2, XCircle, ArrowLeft, RotateCcw, Zap, PlusCircle, ShieldCheck, X } from 'lucide-react';
 
 const FALLBACK_QUIZ: Quiz = {
   id: 1,
@@ -44,12 +45,37 @@ const FALLBACK_QUIZ: Quiz = {
 
 export const QuizPage: React.FC = () => {
   const { id, moduleId } = useParams<{ id?: string; moduleId?: string }>();
+  const { user } = useAuth();
   const navigate = useNavigate();
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
   const [result, setResult] = useState<QuizSubmitResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
+
+  // Staff Quiz Creation State
+  const [showCreateModal, setShowCreateModal] = useState(false);
+  const [newTitle, setNewTitle] = useState('');
+  const [newDescription, setNewDescription] = useState('');
+  const [newPassPercentage, setNewPassPercentage] = useState(70);
+  const [newXpReward, setNewXpReward] = useState(100);
+  const [newQText, setNewQText] = useState('');
+  const [newOpt0, setNewOpt0] = useState('');
+  const [newOpt1, setNewOpt1] = useState('');
+  const [newOpt2, setNewOpt2] = useState('');
+  const [newOpt3, setNewOpt3] = useState('');
+  const [newCorrectIdx, setNewCorrectIdx] = useState(0);
+  const [newExplanation, setNewExplanation] = useState('');
+  const [createMsg, setCreateMsg] = useState('');
+
+  const isStaff = !!(
+    user &&
+    user.role &&
+    (user.role.toUpperCase().includes('STAFF') ||
+      user.role.toUpperCase().includes('PROFESSOR') ||
+      user.role.toUpperCase().includes('TEACHER') ||
+      user.role.toUpperCase().includes('ADMIN'))
+  );
 
   useEffect(() => {
     setLoading(true);
@@ -107,6 +133,42 @@ export const QuizPage: React.FC = () => {
     }
   };
 
+  const handleCreateQuizSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setCreateMsg('');
+    try {
+      const questionsData = [
+        {
+          questionText: newQText || 'Which principle encourages decoupling?',
+          optionsJson: JSON.stringify([
+            newOpt0 || 'Dependency Inversion',
+            newOpt1 || 'Tight Coupling',
+            newOpt2 || 'Hardcoding',
+            newOpt3 || 'Monolithic Design',
+          ]),
+          correctOptionIndex: Number(newCorrectIdx),
+          explanation: newExplanation || 'Decoupling increases maintainability and testability.',
+        },
+      ];
+
+      const created = await quizApi.createQuiz({
+        title: newTitle,
+        description: newDescription,
+        passPercentage: Number(newPassPercentage),
+        xpReward: Number(newXpReward),
+        questions: questionsData as any,
+      });
+
+      setQuiz(created);
+      setShowCreateModal(false);
+      setCreateMsg('New quiz created successfully by Staff!');
+      setNewTitle('');
+      setNewDescription('');
+    } catch (err: any) {
+      setCreateMsg('Error creating quiz: ' + (err.response?.data?.message || err.message || 'Unauthorized'));
+    }
+  };
+
   if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
@@ -125,10 +187,30 @@ export const QuizPage: React.FC = () => {
         <Sidebar />
 
         <main className="flex-1 p-6 lg:p-8 space-y-6">
-          <Link to="/learn" className="inline-flex items-center space-x-1 text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
-            <ArrowLeft className="w-4 h-4" />
-            <span>Back to Curriculum</span>
-          </Link>
+          <div className="flex items-center justify-between">
+            <Link to="/learn" className="inline-flex items-center space-x-1 text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
+              <ArrowLeft className="w-4 h-4" />
+              <span>Back to Curriculum</span>
+            </Link>
+
+            {/* Staff Role-Based Access Button */}
+            {isStaff && (
+              <button
+                onClick={() => setShowCreateModal(true)}
+                className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-2xl text-xs font-black shadow-lg shadow-emerald-500/20 flex items-center space-x-2 transition"
+              >
+                <PlusCircle className="w-4 h-4" />
+                <span>Create New Quiz (Staff Only)</span>
+              </button>
+            )}
+          </div>
+
+          {createMsg && (
+            <div className="p-4 bg-emerald-950/60 border border-emerald-800 text-emerald-300 rounded-2xl text-xs flex items-center space-x-2">
+              <ShieldCheck className="w-4 h-4 shrink-0" />
+              <span>{createMsg}</span>
+            </div>
+          )}
 
           <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 lg:p-8 shadow-sm space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-6">
@@ -238,6 +320,161 @@ export const QuizPage: React.FC = () => {
           </div>
         </main>
       </div>
+
+      {/* Staff Quiz Creation Modal */}
+      {showCreateModal && (
+        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
+          <div className="bg-slate-900 border border-slate-800 text-white w-full max-w-xl rounded-3xl p-6 shadow-2xl space-y-6 my-8">
+            <div className="flex items-center justify-between border-b border-slate-800 pb-4">
+              <div className="flex items-center space-x-2">
+                <ShieldCheck className="w-5 h-5 text-emerald-400" />
+                <h2 className="text-lg font-black">Staff Portal: Create New Evaluation Quiz</h2>
+              </div>
+              <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-white">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleCreateQuizSubmit} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-300 mb-1">Quiz Title</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="e.g. Advanced Structural Patterns Evaluation"
+                  value={newTitle}
+                  onChange={(e) => setNewTitle(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-300 mb-1">Description</label>
+                <textarea
+                  rows={2}
+                  required
+                  placeholder="Short summary of topics evaluated..."
+                  value={newDescription}
+                  onChange={(e) => setNewDescription(e.target.value)}
+                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-indigo-500"
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-300 mb-1">Pass Percentage (%)</label>
+                  <input
+                    type="number"
+                    value={newPassPercentage}
+                    onChange={(e) => setNewPassPercentage(Number(e.target.value))}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-300 mb-1">XP Reward</label>
+                  <input
+                    type="number"
+                    value={newXpReward}
+                    onChange={(e) => setNewXpReward(Number(e.target.value))}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+              </div>
+
+              <div className="border-t border-slate-800 pt-4 space-y-3">
+                <span className="font-extrabold text-indigo-400 uppercase tracking-wider block">Question #1 Details</span>
+
+                <div>
+                  <label className="block font-bold text-slate-300 mb-1">Question Text</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Which design pattern allows object behavior to alter at runtime?"
+                    value={newQText}
+                    onChange={(e) => setNewQText(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <input
+                    type="text"
+                    required
+                    placeholder="Option 1 (Index 0)"
+                    value={newOpt0}
+                    onChange={(e) => setNewOpt0(e.target.value)}
+                    className="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white"
+                  />
+                  <input
+                    type="text"
+                    required
+                    placeholder="Option 2 (Index 1)"
+                    value={newOpt1}
+                    onChange={(e) => setNewOpt1(e.target.value)}
+                    className="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Option 3 (Index 2)"
+                    value={newOpt2}
+                    onChange={(e) => setNewOpt2(e.target.value)}
+                    className="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Option 4 (Index 3)"
+                    value={newOpt3}
+                    onChange={(e) => setNewOpt3(e.target.value)}
+                    className="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white"
+                  />
+                </div>
+
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">Correct Option Index</label>
+                    <select
+                      value={newCorrectIdx}
+                      onChange={(e) => setNewCorrectIdx(Number(e.target.value))}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white"
+                    >
+                      <option value={0}>Option 1 (Index 0)</option>
+                      <option value={1}>Option 2 (Index 1)</option>
+                      <option value={2}>Option 3 (Index 2)</option>
+                      <option value={3}>Option 4 (Index 3)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-300 mb-1">Explanation</label>
+                    <input
+                      type="text"
+                      placeholder="Why is this answer correct?"
+                      value={newExplanation}
+                      onChange={(e) => setNewExplanation(e.target.value)}
+                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white"
+                    />
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-800">
+                <button
+                  type="button"
+                  onClick={() => setShowCreateModal(false)}
+                  className="px-4 py-2.5 bg-slate-800 hover:bg-slate-700 font-bold rounded-xl text-slate-300"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 font-bold rounded-xl text-white shadow-lg shadow-emerald-500/20"
+                >
+                  Publish Quiz to Database
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       <Footer />
     </div>
