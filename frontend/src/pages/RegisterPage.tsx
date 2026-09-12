@@ -13,6 +13,7 @@ export const RegisterPage: React.FC = () => {
   const [university, setUniversity] = useState('Stanford University');
   const [department, setDepartment] = useState('Computer Science');
   const [batchYear, setBatchYear] = useState(2026);
+  const [role, setRole] = useState('ROLE_STUDENT');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [isSlowLoading, setIsSlowLoading] = useState(false);
@@ -34,7 +35,7 @@ export const RegisterPage: React.FC = () => {
     setError('');
     setLoading(true);
     try {
-      await register({ name, email, password, university, department, batchYear: Number(batchYear) });
+      await register({ name, email, password, university, department, batchYear: Number(batchYear), role });
       navigate('/dashboard');
     } catch (err: any) {
       setError(err.response?.data?.message || err.message || 'Registration failed');
@@ -69,6 +70,25 @@ export const RegisterPage: React.FC = () => {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-xs font-semibold text-slate-300 mb-1">Account Role</label>
+            <div className="relative">
+              <select
+                value={role}
+                onChange={(e) => setRole(e.target.value)}
+                className="w-full bg-slate-900 border border-slate-800 rounded-xl px-3.5 py-2.5 text-sm text-white focus:outline-none focus:border-indigo-500 font-semibold"
+              >
+                <option value="ROLE_STUDENT">🎓 Student (Take Quizzes & Solve Challenges)</option>
+                <option value="ROLE_STAFF">👨‍🏫 Staff / Faculty (Create Manual Quizzes & Manage Curriculum)</option>
+              </select>
+            </div>
+            <p className="text-[11px] text-slate-400 mt-1">
+              {role === 'ROLE_STAFF'
+                ? '✨ Staff role grants immediate access to manually create & publish module quizzes.'
+                : 'Student role gives full access to learning modules, quizzes, code lab, and leaderboards.'}
+            </p>
+          </div>
+
           <div>
             <label className="block text-xs font-semibold text-slate-300 mb-1">Full Name</label>
             <div className="relative">

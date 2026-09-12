@@ -44,6 +44,10 @@ public class AuthService {
                 request.getBatchYear() != null ? request.getBatchYear() : 2026
         );
 
+        if (request.getRole() != null && !request.getRole().isBlank()) {
+            user.setRole(request.getRole());
+        }
+
         User savedUser = userRepository.save(user);
         profileRepository.save(new Profile(savedUser));
 

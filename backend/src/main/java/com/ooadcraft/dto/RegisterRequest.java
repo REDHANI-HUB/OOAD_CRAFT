@@ -22,6 +22,8 @@ public class RegisterRequest {
 
     private Integer batchYear;
 
+    private String role;
+
     public RegisterRequest() {}
 
     public RegisterRequest(String email, String password, String name, String university, String department, Integer batchYear) {
@@ -31,6 +33,16 @@ public class RegisterRequest {
         this.university = university;
         this.department = department;
         this.batchYear = batchYear;
+    }
+
+    public RegisterRequest(String email, String password, String name, String university, String department, Integer batchYear, String role) {
+        this.email = email;
+        this.password = password;
+        this.name = name;
+        this.university = university;
+        this.department = department;
+        this.batchYear = batchYear;
+        this.role = role;
     }
 
     public String getEmail() {
@@ -79,5 +91,13 @@ public class RegisterRequest {
 
     public void setBatchYear(Integer batchYear) {
         this.batchYear = batchYear;
+    }
+
+    public String getRole() {
+        return role;
+    }
+
+    public void setRole(String role) {
+        this.role = role;
     }
 }

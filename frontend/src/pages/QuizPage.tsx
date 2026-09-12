@@ -60,10 +60,10 @@ export const QuizPage: React.FC = () => {
 
   const [allQuizzes, setAllQuizzes] = useState<Quiz[]>([FALLBACK_QUIZ]);
   const [allModules, setAllModules] = useState<Module[]>([]);
-  const [quiz, setQuiz] = useState<Quiz | null>(null);
+  const [quiz, setQuiz] = useState<Quiz>(FALLBACK_QUIZ);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
   const [result, setResult] = useState<QuizSubmitResponse | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [fetching, setFetching] = useState(false);
   const [isSlowLoading, setIsSlowLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
@@ -98,7 +98,7 @@ export const QuizPage: React.FC = () => {
 
   useEffect(() => {
     let timer: any;
-    if (loading) {
+    if (fetching) {
       timer = setTimeout(() => {
         setIsSlowLoading(true);
       }, 2500);
@@ -106,7 +106,7 @@ export const QuizPage: React.FC = () => {
       setIsSlowLoading(false);
     }
     return () => clearTimeout(timer);
-  }, [loading]);
+  }, [fetching]);
 
   useEffect(() => {
     // Load modules for dropdown
@@ -121,7 +121,7 @@ export const QuizPage: React.FC = () => {
   }, []);
 
   useEffect(() => {
-    setLoading(true);
+    setFetching(true);
     const fetchQuiz = async () => {
       try {
         let q: Quiz | null = null;
@@ -135,14 +135,11 @@ export const QuizPage: React.FC = () => {
         }
         if (q && q.questions && q.questions.length > 0) {
           setQuiz(q);
-        } else {
-          setQuiz(FALLBACK_QUIZ);
         }
       } catch (err) {
-        console.warn('Quiz API fetch failed, loading default evaluation:', err);
-        setQuiz(FALLBACK_QUIZ);
+        console.warn('Quiz API fetch failed, using active evaluation:', err);
       } finally {
-        setLoading(false);
+        setFetching(false);
       }
     };
     fetchQuiz();
@@ -238,27 +235,6 @@ export const QuizPage: React.FC = () => {
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-slate-900 text-white flex flex-col">
-        <Navbar />
-        <div className="flex-1 flex max-w-7xl w-full mx-auto">
-          <Sidebar />
-          <main className="flex-1 p-8 flex flex-col items-center justify-center space-y-4 text-center">
-            <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
-            <div className="font-bold text-lg text-indigo-400">Loading module evaluations...</div>
-            {isSlowLoading && (
-              <div className="max-w-md p-3 bg-amber-950/40 border border-amber-800/60 text-amber-300 rounded-xl text-xs flex items-center space-x-2.5 animate-pulse">
-                <RefreshCw className="w-4 h-4 shrink-0 animate-spin text-amber-400" />
-                <span>Connecting to backend server... (Render free tier may take ~20-30s to wake up on cold starts)</span>
-              </div>
-            )}
-          </main>
-        </div>
-      </div>
-    );
-  }
-
   const activeQuiz = quiz || FALLBACK_QUIZ;
 
   return (
@@ -269,6 +245,13 @@ export const QuizPage: React.FC = () => {
         <Sidebar />
 
         <main className="flex-1 p-6 lg:p-8 space-y-6">
+          {fetching && isSlowLoading && (
+            <div className="p-3 bg-amber-950/40 border border-amber-800/60 text-amber-300 rounded-xl text-xs flex items-center space-x-2.5 animate-pulse">
+              <RefreshCw className="w-4 h-4 shrink-0 animate-spin text-amber-400" />
+              <span>Connecting to backend server... (Render free tier may take ~20-30s to wake up on cold starts)</span>
+            </div>
+          )}
+
           <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <Link to="/learn" className="inline-flex items-center space-x-1 text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
               <ArrowLeft className="w-4 h-4" />
