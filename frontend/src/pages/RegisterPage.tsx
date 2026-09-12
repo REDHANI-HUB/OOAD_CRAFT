@@ -1,7 +1,7 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { User, Mail, Lock, Building, BookOpen, Calendar, ArrowRight, AlertCircle } from 'lucide-react';
+import { User, Mail, Lock, Building, BookOpen, Calendar, ArrowRight, AlertCircle, Loader2, RefreshCw } from 'lucide-react';
 
 export const RegisterPage: React.FC = () => {
   const { register } = useAuth();
@@ -15,6 +15,19 @@ export const RegisterPage: React.FC = () => {
   const [batchYear, setBatchYear] = useState(2026);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [isSlowLoading, setIsSlowLoading] = useState(false);
+
+  useEffect(() => {
+    let timer: any;
+    if (loading) {
+      timer = setTimeout(() => {
+        setIsSlowLoading(true);
+      }, 2500);
+    } else {
+      setIsSlowLoading(false);
+    }
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,6 +58,13 @@ export const RegisterPage: React.FC = () => {
           <div className="p-3 bg-rose-950/60 border border-rose-800 text-rose-300 rounded-xl text-xs flex items-center space-x-2">
             <AlertCircle className="w-4 h-4 shrink-0" />
             <span>{error}</span>
+          </div>
+        )}
+
+        {isSlowLoading && (
+          <div className="p-3 bg-amber-950/40 border border-amber-800/60 text-amber-300 rounded-xl text-xs flex items-center space-x-2.5 animate-pulse">
+            <RefreshCw className="w-4 h-4 shrink-0 animate-spin text-amber-400" />
+            <span>Connecting to backend server... (Render free tier may take ~20-30s to wake up on cold starts)</span>
           </div>
         )}
 
@@ -132,10 +152,19 @@ export const RegisterPage: React.FC = () => {
           <button
             type="submit"
             disabled={loading}
-            className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 font-bold rounded-xl shadow-lg shadow-indigo-500/25 flex items-center justify-center space-x-2 text-sm transition"
+            className="w-full py-3 bg-indigo-600 hover:bg-indigo-500 font-bold rounded-xl shadow-lg shadow-indigo-500/25 flex items-center justify-center space-x-2 text-sm transition disabled:opacity-60"
           >
-            <span>{loading ? 'Creating Account...' : 'Create Account'}</span>
-            <ArrowRight className="w-4 h-4" />
+            {loading ? (
+              <>
+                <Loader2 className="w-4 h-4 animate-spin text-white" />
+                <span>{isSlowLoading ? 'Waking up backend server...' : 'Creating Account...'}</span>
+              </>
+            ) : (
+              <>
+                <span>Create Account</span>
+                <ArrowRight className="w-4 h-4" />
+              </>
+            )}
           </button>
         </form>
 
