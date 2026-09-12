@@ -8,9 +8,9 @@ import java.util.List;
 import java.util.Optional;
 
 public interface QuizRepository extends JpaRepository<Quiz, Long> {
-    @Query("SELECT q FROM Quiz q WHERE q.module.id = :moduleId")
-    Optional<Quiz> findByModuleId(@Param("moduleId") Long moduleId);
+    @Query("SELECT q FROM Quiz q WHERE q.module.id = :moduleId ORDER BY q.id DESC")
+    List<Quiz> findByModuleId(@Param("moduleId") Long moduleId);
 
-    @Query("SELECT q FROM Quiz q WHERE q.module.id = :moduleId")
+    @Query("SELECT q FROM Quiz q WHERE q.module.id = :moduleId ORDER BY q.id DESC")
     List<Quiz> findAllByModuleId(@Param("moduleId") Long moduleId);
 }

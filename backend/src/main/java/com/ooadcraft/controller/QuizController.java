@@ -30,8 +30,12 @@ public class QuizController {
     }
 
     @GetMapping("/module/{moduleId}")
-    public ResponseEntity<Quiz> getQuizByModuleId(@PathVariable Long moduleId) {
-        return ResponseEntity.ok(quizService.getQuizByModuleId(moduleId));
+    public ResponseEntity<?> getQuizByModuleId(@PathVariable Long moduleId) {
+        Quiz quiz = quizService.getQuizByModuleId(moduleId);
+        if (quiz == null) {
+            return ResponseEntity.status(404).body("No quiz found for module " + moduleId);
+        }
+        return ResponseEntity.ok(quiz);
     }
 
     @Autowired

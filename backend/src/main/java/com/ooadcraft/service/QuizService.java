@@ -45,8 +45,11 @@ public class QuizService {
 
     @Transactional(readOnly = true)
     public Quiz getQuizByModuleId(Long moduleId) {
-        return quizRepository.findByModuleId(moduleId)
-                .orElseThrow(() -> new IllegalArgumentException("Quiz not found for module id: " + moduleId));
+        List<Quiz> list = quizRepository.findAllByModuleId(moduleId);
+        if (list == null || list.isEmpty()) {
+            return null;
+        }
+        return list.get(0);
     }
 
     @Transactional

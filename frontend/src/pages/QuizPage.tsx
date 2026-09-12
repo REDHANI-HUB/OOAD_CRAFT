@@ -6,7 +6,7 @@ import { Footer } from '../components/Footer';
 import { quizApi, curriculumApi } from '../api';
 import { useAuth } from '../context/AuthContext';
 import { Quiz, QuizSubmitResponse, Module } from '../types';
-import { Award, CheckCircle2, XCircle, ArrowLeft, RotateCcw, Zap, PlusCircle, ShieldCheck, X, BookOpen, Layers } from 'lucide-react';
+import { Award, CheckCircle2, XCircle, ArrowLeft, RotateCcw, Zap, PlusCircle, ShieldCheck, X, BookOpen, Layers, Loader2, RefreshCw } from 'lucide-react';
 
 const FALLBACK_QUIZ: Quiz = {
   id: 1,
@@ -64,6 +64,7 @@ export const QuizPage: React.FC = () => {
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
   const [result, setResult] = useState<QuizSubmitResponse | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isSlowLoading, setIsSlowLoading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
 
   // Staff Creation Modal State
@@ -94,6 +95,18 @@ export const QuizPage: React.FC = () => {
       user.role.toUpperCase().includes('TEACHER') ||
       user.role.toUpperCase().includes('ADMIN'))
   );
+
+  useEffect(() => {
+    let timer: any;
+    if (loading) {
+      timer = setTimeout(() => {
+        setIsSlowLoading(true);
+      }, 2500);
+    } else {
+      setIsSlowLoading(false);
+    }
+    return () => clearTimeout(timer);
+  }, [loading]);
 
   useEffect(() => {
     // Load modules for dropdown
@@ -227,8 +240,21 @@ export const QuizPage: React.FC = () => {
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
-        <div className="font-bold text-indigo-400">Loading quiz...</div>
+      <div className="min-h-screen bg-slate-900 text-white flex flex-col">
+        <Navbar />
+        <div className="flex-1 flex max-w-7xl w-full mx-auto">
+          <Sidebar />
+          <main className="flex-1 p-8 flex flex-col items-center justify-center space-y-4 text-center">
+            <Loader2 className="w-8 h-8 animate-spin text-indigo-500" />
+            <div className="font-bold text-lg text-indigo-400">Loading module evaluations...</div>
+            {isSlowLoading && (
+              <div className="max-w-md p-3 bg-amber-950/40 border border-amber-800/60 text-amber-300 rounded-xl text-xs flex items-center space-x-2.5 animate-pulse">
+                <RefreshCw className="w-4 h-4 shrink-0 animate-spin text-amber-400" />
+                <span>Connecting to backend server... (Render free tier may take ~20-30s to wake up on cold starts)</span>
+              </div>
+            )}
+          </main>
+        </div>
       </div>
     );
   }
