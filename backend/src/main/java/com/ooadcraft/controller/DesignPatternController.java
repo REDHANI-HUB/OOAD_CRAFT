@@ -10,7 +10,6 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/api/patterns")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class DesignPatternController {
 
     @Autowired

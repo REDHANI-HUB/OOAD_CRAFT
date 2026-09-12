@@ -17,7 +17,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/challenges")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class ChallengeController {
 
     @Autowired

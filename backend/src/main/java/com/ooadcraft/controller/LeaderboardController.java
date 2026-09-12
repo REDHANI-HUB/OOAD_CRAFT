@@ -15,7 +15,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/leaderboard")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class LeaderboardController {
 
     @Autowired

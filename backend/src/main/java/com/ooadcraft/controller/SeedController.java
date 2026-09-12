@@ -12,7 +12,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/seed")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class SeedController {
 
     @Autowired private ModuleRepository moduleRepository;

@@ -17,7 +17,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/case-studies")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class CaseStudyController {
 
     @Autowired

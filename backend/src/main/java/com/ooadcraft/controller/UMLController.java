@@ -15,7 +15,6 @@ import java.util.Map;
 
 @RestController
 @RequestMapping("/api/uml")
-@CrossOrigin(origins = "http://localhost:5173", allowCredentials = "true")
 public class UMLController {
 
     @Autowired
