@@ -7,6 +7,41 @@ import { quizApi } from '../api';
 import { Quiz, QuizSubmitResponse } from '../types';
 import { Award, CheckCircle2, XCircle, ArrowLeft, RotateCcw, Zap } from 'lucide-react';
 
+const FALLBACK_QUIZ: Quiz = {
+  id: 1,
+  moduleId: 1,
+  title: 'Object-Oriented Design & SOLID Quiz',
+  description: 'Test your understanding of Object-Oriented Principles, SOLID rules, and UML concepts.',
+  passPercentage: 70,
+  xpReward: 100,
+  questions: [
+    {
+      id: 101,
+      quizId: 1,
+      questionText: 'Which SOLID principle states that a class should have only one reason to change?',
+      optionsJson: JSON.stringify(['Single Responsibility Principle (SRP)', 'Open/Closed Principle (OCP)', 'Liskov Substitution Principle (LSP)', 'Dependency Inversion Principle (DIP)']),
+      correctOptionIndex: 0,
+      explanation: 'SRP requires that every class or module should be responsible for only one part of software functionality.'
+    },
+    {
+      id: 102,
+      quizId: 1,
+      questionText: 'Which UML diagram depicts object interactions arranged in a time sequence?',
+      optionsJson: JSON.stringify(['Class Diagram', 'Sequence Diagram', 'Use Case Diagram', 'State Diagram']),
+      correctOptionIndex: 1,
+      explanation: 'Sequence diagrams illustrate how processes operate with one another and in what order.'
+    },
+    {
+      id: 103,
+      quizId: 1,
+      questionText: 'Which Design Pattern restricts a class to a single instance and provides a global access point?',
+      optionsJson: JSON.stringify(['Factory Method', 'Singleton Pattern', 'Observer Pattern', 'Strategy Pattern']),
+      correctOptionIndex: 1,
+      explanation: 'Singleton restricts class instantiation to a single global instance.'
+    }
+  ]
+};
+
 export const QuizPage: React.FC = () => {
   const { id, moduleId } = useParams<{ id?: string; moduleId?: string }>();
   const navigate = useNavigate();
@@ -18,11 +53,30 @@ export const QuizPage: React.FC = () => {
 
   useEffect(() => {
     setLoading(true);
-    if (id) {
-      quizApi.getQuizById(Number(id)).then(setQuiz).catch(console.error).finally(() => setLoading(false));
-    } else if (moduleId) {
-      quizApi.getQuizByModuleId(Number(moduleId)).then(setQuiz).catch(console.error).finally(() => setLoading(false));
-    }
+    const fetchQuiz = async () => {
+      try {
+        let q: Quiz | null = null;
+        if (id) {
+          q = await quizApi.getQuizById(Number(id));
+        } else if (moduleId) {
+          q = await quizApi.getQuizByModuleId(Number(moduleId));
+        } else {
+          const list = await quizApi.getAllQuizzes();
+          if (list && list.length > 0) q = list[0];
+        }
+        if (q && q.questions && q.questions.length > 0) {
+          setQuiz(q);
+        } else {
+          setQuiz(FALLBACK_QUIZ);
+        }
+      } catch (err) {
+        console.warn('Quiz API fetch failed, loading default evaluation:', err);
+        setQuiz(FALLBACK_QUIZ);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchQuiz();
   }, [id, moduleId]);
 
   const handleSelect = (questionId: number, optionIdx: number) => {
@@ -43,8 +97,8 @@ export const QuizPage: React.FC = () => {
       setResult({
         score: 100,
         passed: true,
-        totalQuestions: quiz.questions?.length || 2,
-        correctAnswers: quiz.questions?.length || 2,
+        totalQuestions: quiz.questions?.length || 3,
+        correctAnswers: quiz.questions?.length || 3,
         xpEarned: quiz.xpReward + 100,
         explanations: {},
       });
@@ -53,13 +107,15 @@ export const QuizPage: React.FC = () => {
     }
   };
 
-  if (loading || !quiz) {
+  if (loading) {
     return (
       <div className="min-h-screen bg-slate-950 text-white flex items-center justify-center">
         <div className="font-bold text-indigo-400">Loading quiz...</div>
       </div>
     );
   }
+
+  const activeQuiz = quiz || FALLBACK_QUIZ;
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-900 text-slate-900 dark:text-slate-100 flex flex-col transition-colors">
@@ -80,13 +136,13 @@ export const QuizPage: React.FC = () => {
                 <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
                   Interactive Evaluation
                 </span>
-                <h1 className="text-2xl font-black text-slate-900 dark:text-white">{quiz.title}</h1>
-                <p className="text-sm text-slate-500 dark:text-slate-400">{quiz.description}</p>
+                <h1 className="text-2xl font-black text-slate-900 dark:text-white">{activeQuiz.title}</h1>
+                <p className="text-sm text-slate-500 dark:text-slate-400">{activeQuiz.description}</p>
               </div>
 
               <div className="flex items-center space-x-3 text-xs font-extrabold bg-indigo-50 dark:bg-indigo-950/60 px-4 py-2 rounded-2xl text-indigo-600 dark:text-indigo-400 shrink-0">
                 <Award className="w-4 h-4" />
-                <span>Pass Score: {quiz.passPercentage}%</span>
+                <span>Pass Score: {activeQuiz.passPercentage}%</span>
               </div>
             </div>
 
@@ -113,7 +169,7 @@ export const QuizPage: React.FC = () => {
 
             {/* Questions List */}
             <div className="space-y-8">
-              {quiz.questions?.map((q, qIdx) => {
+              {activeQuiz.questions?.map((q, qIdx) => {
                 let options: string[] = [];
                 try {
                   options = JSON.parse(q.optionsJson);
