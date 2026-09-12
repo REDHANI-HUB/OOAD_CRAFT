@@ -3,10 +3,10 @@ import { useParams, useNavigate, Link } from 'react-router-dom';
 import { Navbar } from '../components/Navbar';
 import { Sidebar } from '../components/Sidebar';
 import { Footer } from '../components/Footer';
-import { quizApi } from '../api';
+import { quizApi, curriculumApi } from '../api';
 import { useAuth } from '../context/AuthContext';
-import { Quiz, QuizSubmitResponse } from '../types';
-import { Award, CheckCircle2, XCircle, ArrowLeft, RotateCcw, Zap, PlusCircle, ShieldCheck, X } from 'lucide-react';
+import { Quiz, QuizSubmitResponse, Module } from '../types';
+import { Award, CheckCircle2, XCircle, ArrowLeft, RotateCcw, Zap, PlusCircle, ShieldCheck, X, BookOpen, Layers } from 'lucide-react';
 
 const FALLBACK_QUIZ: Quiz = {
   id: 1,
@@ -43,29 +43,47 @@ const FALLBACK_QUIZ: Quiz = {
   ]
 };
 
+interface NewQuestionInput {
+  questionText: string;
+  opt0: string;
+  opt1: string;
+  opt2: string;
+  opt3: string;
+  correctIdx: number;
+  explanation: string;
+}
+
 export const QuizPage: React.FC = () => {
   const { id, moduleId } = useParams<{ id?: string; moduleId?: string }>();
   const { user } = useAuth();
   const navigate = useNavigate();
+
+  const [allQuizzes, setAllQuizzes] = useState<Quiz[]>([FALLBACK_QUIZ]);
+  const [allModules, setAllModules] = useState<Module[]>([]);
   const [quiz, setQuiz] = useState<Quiz | null>(null);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<number, number>>({});
   const [result, setResult] = useState<QuizSubmitResponse | null>(null);
   const [loading, setLoading] = useState(true);
   const [submitting, setSubmitting] = useState(false);
 
-  // Staff Quiz Creation State
+  // Staff Creation Modal State
   const [showCreateModal, setShowCreateModal] = useState(false);
   const [newTitle, setNewTitle] = useState('');
   const [newDescription, setNewDescription] = useState('');
+  const [newModuleId, setNewModuleId] = useState<number>(1);
   const [newPassPercentage, setNewPassPercentage] = useState(70);
   const [newXpReward, setNewXpReward] = useState(100);
-  const [newQText, setNewQText] = useState('');
-  const [newOpt0, setNewOpt0] = useState('');
-  const [newOpt1, setNewOpt1] = useState('');
-  const [newOpt2, setNewOpt2] = useState('');
-  const [newOpt3, setNewOpt3] = useState('');
-  const [newCorrectIdx, setNewCorrectIdx] = useState(0);
-  const [newExplanation, setNewExplanation] = useState('');
+  const [questionsList, setQuestionsList] = useState<NewQuestionInput[]>([
+    {
+      questionText: '',
+      opt0: '',
+      opt1: '',
+      opt2: '',
+      opt3: '',
+      correctIdx: 0,
+      explanation: '',
+    },
+  ]);
   const [createMsg, setCreateMsg] = useState('');
 
   const isStaff = !!(
@@ -76,6 +94,18 @@ export const QuizPage: React.FC = () => {
       user.role.toUpperCase().includes('TEACHER') ||
       user.role.toUpperCase().includes('ADMIN'))
   );
+
+  useEffect(() => {
+    // Load modules for dropdown
+    curriculumApi.getAllModules().then((mods) => {
+      if (mods && mods.length > 0) setAllModules(mods);
+    }).catch(console.error);
+
+    // Load all quizzes for navigation bar
+    quizApi.getAllQuizzes().then((list) => {
+      if (list && list.length > 0) setAllQuizzes(list);
+    }).catch(console.error);
+  }, []);
 
   useEffect(() => {
     setLoading(true);
@@ -104,6 +134,32 @@ export const QuizPage: React.FC = () => {
     };
     fetchQuiz();
   }, [id, moduleId]);
+
+  const handleAddQuestionField = () => {
+    setQuestionsList([
+      ...questionsList,
+      {
+        questionText: '',
+        opt0: '',
+        opt1: '',
+        opt2: '',
+        opt3: '',
+        correctIdx: 0,
+        explanation: '',
+      },
+    ]);
+  };
+
+  const handleUpdateQuestion = (idx: number, field: keyof NewQuestionInput, val: any) => {
+    const updated = [...questionsList];
+    updated[idx] = { ...updated[idx], [field]: val };
+    setQuestionsList(updated);
+  };
+
+  const handleRemoveQuestion = (idx: number) => {
+    if (questionsList.length === 1) return;
+    setQuestionsList(questionsList.filter((_, i) => i !== idx));
+  };
 
   const handleSelect = (questionId: number, optionIdx: number) => {
     if (result) return;
@@ -137,31 +193,31 @@ export const QuizPage: React.FC = () => {
     e.preventDefault();
     setCreateMsg('');
     try {
-      const questionsData = [
-        {
-          questionText: newQText || 'Which principle encourages decoupling?',
-          optionsJson: JSON.stringify([
-            newOpt0 || 'Dependency Inversion',
-            newOpt1 || 'Tight Coupling',
-            newOpt2 || 'Hardcoding',
-            newOpt3 || 'Monolithic Design',
-          ]),
-          correctOptionIndex: Number(newCorrectIdx),
-          explanation: newExplanation || 'Decoupling increases maintainability and testability.',
-        },
-      ];
+      const formattedQuestions = questionsList.map((q) => ({
+        questionText: q.questionText || 'Which design principle improves software flexibility?',
+        optionsJson: JSON.stringify([
+          q.opt0 || 'Abstraction & Interfaces',
+          q.opt1 || 'Tight Coupling',
+          q.opt2 || 'Hardcoding',
+          q.opt3 || 'Duplicate Logic',
+        ]),
+        correctOptionIndex: Number(q.correctIdx),
+        explanation: q.explanation || 'Proper design abstractions decouple software components.',
+      }));
 
       const created = await quizApi.createQuiz({
         title: newTitle,
         description: newDescription,
+        moduleId: Number(newModuleId),
         passPercentage: Number(newPassPercentage),
         xpReward: Number(newXpReward),
-        questions: questionsData as any,
+        questions: formattedQuestions as any,
       });
 
       setQuiz(created);
+      setAllQuizzes((prev) => [created, ...prev]);
       setShowCreateModal(false);
-      setCreateMsg('New quiz created successfully by Staff!');
+      setCreateMsg(`New manual quiz "${created.title}" successfully assigned to Module ${newModuleId}!`);
       setNewTitle('');
       setNewDescription('');
     } catch (err: any) {
@@ -187,7 +243,7 @@ export const QuizPage: React.FC = () => {
         <Sidebar />
 
         <main className="flex-1 p-6 lg:p-8 space-y-6">
-          <div className="flex items-center justify-between">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <Link to="/learn" className="inline-flex items-center space-x-1 text-sm font-semibold text-indigo-600 dark:text-indigo-400 hover:underline">
               <ArrowLeft className="w-4 h-4" />
               <span>Back to Curriculum</span>
@@ -200,7 +256,7 @@ export const QuizPage: React.FC = () => {
                 className="px-4 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white rounded-2xl text-xs font-black shadow-lg shadow-emerald-500/20 flex items-center space-x-2 transition"
               >
                 <PlusCircle className="w-4 h-4" />
-                <span>Create New Quiz (Staff Only)</span>
+                <span>Create Manual Module Quiz (Staff Only)</span>
               </button>
             )}
           </div>
@@ -212,11 +268,42 @@ export const QuizPage: React.FC = () => {
             </div>
           )}
 
+          {/* Quiz Selection Bar (Shows Existing & Manual Staff Quizzes) */}
+          <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-2xl p-4 shadow-sm space-y-2">
+            <div className="flex items-center space-x-2 text-xs font-bold text-slate-400 uppercase tracking-wider">
+              <Layers className="w-3.5 h-3.5 text-indigo-500" />
+              <span>Available Module Evaluations ({allQuizzes.length})</span>
+            </div>
+            <div className="flex items-center space-x-2 overflow-x-auto pb-1 scrollbar-none">
+              {allQuizzes.map((q) => {
+                const isSelected = activeQuiz.id === q.id;
+                return (
+                  <button
+                    key={q.id}
+                    onClick={() => {
+                      setQuiz(q);
+                      setResult(null);
+                      setSelectedAnswers({});
+                    }}
+                    className={`px-3.5 py-2 rounded-xl text-xs font-extrabold whitespace-nowrap transition border ${
+                      isSelected
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-md'
+                        : 'bg-slate-50 dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 hover:border-indigo-500'
+                    }`}
+                  >
+                    {q.title}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+
           <div className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-800 rounded-3xl p-6 lg:p-8 shadow-sm space-y-6">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-slate-100 dark:border-slate-800 pb-6">
               <div>
-                <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
-                  Interactive Evaluation
+                <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center space-x-1">
+                  <BookOpen className="w-3.5 h-3.5" />
+                  <span>Module {activeQuiz.moduleId || 1} Evaluation</span>
                 </span>
                 <h1 className="text-2xl font-black text-slate-900 dark:text-white">{activeQuiz.title}</h1>
                 <p className="text-sm text-slate-500 dark:text-slate-400">{activeQuiz.description}</p>
@@ -324,28 +411,56 @@ export const QuizPage: React.FC = () => {
       {/* Staff Quiz Creation Modal */}
       {showCreateModal && (
         <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4 overflow-y-auto">
-          <div className="bg-slate-900 border border-slate-800 text-white w-full max-w-xl rounded-3xl p-6 shadow-2xl space-y-6 my-8">
+          <div className="bg-slate-900 border border-slate-800 text-white w-full max-w-2xl rounded-3xl p-6 shadow-2xl space-y-6 my-8 max-h-[90vh] overflow-y-auto">
             <div className="flex items-center justify-between border-b border-slate-800 pb-4">
               <div className="flex items-center space-x-2">
                 <ShieldCheck className="w-5 h-5 text-emerald-400" />
-                <h2 className="text-lg font-black">Staff Portal: Create New Evaluation Quiz</h2>
+                <h2 className="text-lg font-black">Staff Portal: Create Manual Module Quiz</h2>
               </div>
               <button onClick={() => setShowCreateModal(false)} className="text-slate-400 hover:text-white">
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            <form onSubmit={handleCreateQuizSubmit} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-bold text-slate-300 mb-1">Quiz Title</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="e.g. Advanced Structural Patterns Evaluation"
-                  value={newTitle}
-                  onChange={(e) => setNewTitle(e.target.value)}
-                  className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-indigo-500"
-                />
+            <form onSubmit={handleCreateQuizSubmit} className="space-y-5 text-xs">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-300 mb-1">Assign to Curriculum Module</label>
+                  <select
+                    value={newModuleId}
+                    onChange={(e) => setNewModuleId(Number(e.target.value))}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-indigo-500 font-semibold"
+                  >
+                    {allModules.length > 0 ? (
+                      allModules.map((m) => (
+                        <option key={m.id} value={m.id}>
+                          Module {m.orderIndex || m.id}: {m.title}
+                        </option>
+                      ))
+                    ) : (
+                      <>
+                        <option value={1}>Module 1: OOP Fundamentals & Encapsulation</option>
+                        <option value={2}>Module 2: Object-Oriented Analysis & Requirements</option>
+                        <option value={3}>Module 3: Structural & Behavioral UML Diagrams</option>
+                        <option value={4}>Module 4: SOLID Design Principles</option>
+                        <option value={5}>Module 5: Creational, Structural & Behavioral Patterns</option>
+                        <option value={6}>Module 6: Enterprise Architecture & Case Studies</option>
+                      </>
+                    )}
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-300 mb-1">Quiz Title</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="e.g. Advanced Structural Patterns Evaluation"
+                    value={newTitle}
+                    onChange={(e) => setNewTitle(e.target.value)}
+                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-indigo-500"
+                  />
+                </div>
               </div>
 
               <div>
@@ -353,7 +468,7 @@ export const QuizPage: React.FC = () => {
                 <textarea
                   rows={2}
                   required
-                  placeholder="Short summary of topics evaluated..."
+                  placeholder="Short summary of module concepts evaluated in this quiz..."
                   value={newDescription}
                   onChange={(e) => setNewDescription(e.target.value)}
                   className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-indigo-500"
@@ -381,79 +496,111 @@ export const QuizPage: React.FC = () => {
                 </div>
               </div>
 
-              <div className="border-t border-slate-800 pt-4 space-y-3">
-                <span className="font-extrabold text-indigo-400 uppercase tracking-wider block">Question #1 Details</span>
+              {/* Dynamic Questions Builder */}
+              <div className="border-t border-slate-800 pt-4 space-y-6">
+                <div className="flex items-center justify-between">
+                  <span className="font-black text-indigo-400 uppercase tracking-wider text-xs flex items-center space-x-1">
+                    <BookOpen className="w-4 h-4" />
+                    <span>Quiz Questions ({questionsList.length})</span>
+                  </span>
 
-                <div>
-                  <label className="block font-bold text-slate-300 mb-1">Question Text</label>
-                  <input
-                    type="text"
-                    required
-                    placeholder="e.g. Which design pattern allows object behavior to alter at runtime?"
-                    value={newQText}
-                    onChange={(e) => setNewQText(e.target.value)}
-                    className="w-full bg-slate-950 border border-slate-800 rounded-xl p-3 text-white focus:outline-none focus:border-indigo-500"
-                  />
+                  <button
+                    type="button"
+                    onClick={handleAddQuestionField}
+                    className="px-3 py-1.5 bg-indigo-600/20 hover:bg-indigo-600/30 text-indigo-300 rounded-xl font-bold text-xs flex items-center space-x-1 border border-indigo-500/30 transition"
+                  >
+                    <PlusCircle className="w-3.5 h-3.5" />
+                    <span>+ Add Another Question</span>
+                  </button>
                 </div>
 
-                <div className="grid grid-cols-2 gap-2">
-                  <input
-                    type="text"
-                    required
-                    placeholder="Option 1 (Index 0)"
-                    value={newOpt0}
-                    onChange={(e) => setNewOpt0(e.target.value)}
-                    className="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white"
-                  />
-                  <input
-                    type="text"
-                    required
-                    placeholder="Option 2 (Index 1)"
-                    value={newOpt1}
-                    onChange={(e) => setNewOpt1(e.target.value)}
-                    className="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Option 3 (Index 2)"
-                    value={newOpt2}
-                    onChange={(e) => setNewOpt2(e.target.value)}
-                    className="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white"
-                  />
-                  <input
-                    type="text"
-                    placeholder="Option 4 (Index 3)"
-                    value={newOpt3}
-                    onChange={(e) => setNewOpt3(e.target.value)}
-                    className="bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white"
-                  />
-                </div>
+                {questionsList.map((q, qIdx) => (
+                  <div key={qIdx} className="bg-slate-950 border border-slate-800 p-4 rounded-2xl space-y-3 relative">
+                    <div className="flex items-center justify-between font-bold text-slate-300">
+                      <span>Question #{qIdx + 1}</span>
+                      {questionsList.length > 1 && (
+                        <button
+                          type="button"
+                          onClick={() => handleRemoveQuestion(qIdx)}
+                          className="text-rose-400 hover:text-rose-300 text-xs font-semibold"
+                        >
+                          Remove
+                        </button>
+                      )}
+                    </div>
 
-                <div className="grid grid-cols-2 gap-3">
-                  <div>
-                    <label className="block font-bold text-slate-300 mb-1">Correct Option Index</label>
-                    <select
-                      value={newCorrectIdx}
-                      onChange={(e) => setNewCorrectIdx(Number(e.target.value))}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white"
-                    >
-                      <option value={0}>Option 1 (Index 0)</option>
-                      <option value={1}>Option 2 (Index 1)</option>
-                      <option value={2}>Option 3 (Index 2)</option>
-                      <option value={3}>Option 4 (Index 3)</option>
-                    </select>
+                    <div>
+                      <label className="block font-bold text-slate-400 mb-1">Question Prompt</label>
+                      <input
+                        type="text"
+                        required
+                        placeholder="e.g. Which design pattern allows object behavior to alter at runtime?"
+                        value={q.questionText}
+                        onChange={(e) => handleUpdateQuestion(qIdx, 'questionText', e.target.value)}
+                        className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-white focus:outline-none focus:border-indigo-500"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                      <input
+                        type="text"
+                        required
+                        placeholder="Option 1 (Index 0)"
+                        value={q.opt0}
+                        onChange={(e) => handleUpdateQuestion(qIdx, 'opt0', e.target.value)}
+                        className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-white"
+                      />
+                      <input
+                        type="text"
+                        required
+                        placeholder="Option 2 (Index 1)"
+                        value={q.opt1}
+                        onChange={(e) => handleUpdateQuestion(qIdx, 'opt1', e.target.value)}
+                        className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-white"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Option 3 (Index 2)"
+                        value={q.opt2}
+                        onChange={(e) => handleUpdateQuestion(qIdx, 'opt2', e.target.value)}
+                        className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-white"
+                      />
+                      <input
+                        type="text"
+                        placeholder="Option 4 (Index 3)"
+                        value={q.opt3}
+                        onChange={(e) => handleUpdateQuestion(qIdx, 'opt3', e.target.value)}
+                        className="bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-white"
+                      />
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
+                      <div>
+                        <label className="block font-bold text-slate-400 mb-1">Correct Choice</label>
+                        <select
+                          value={q.correctIdx}
+                          onChange={(e) => handleUpdateQuestion(qIdx, 'correctIdx', Number(e.target.value))}
+                          className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-white"
+                        >
+                          <option value={0}>Option 1 (Index 0)</option>
+                          <option value={1}>Option 2 (Index 1)</option>
+                          <option value={2}>Option 3 (Index 2)</option>
+                          <option value={3}>Option 4 (Index 3)</option>
+                        </select>
+                      </div>
+                      <div>
+                        <label className="block font-bold text-slate-400 mb-1">Explanation</label>
+                        <input
+                          type="text"
+                          placeholder="Why is this answer correct?"
+                          value={q.explanation}
+                          onChange={(e) => handleUpdateQuestion(qIdx, 'explanation', e.target.value)}
+                          className="w-full bg-slate-900 border border-slate-800 rounded-xl p-2.5 text-white"
+                        />
+                      </div>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block font-bold text-slate-300 mb-1">Explanation</label>
-                    <input
-                      type="text"
-                      placeholder="Why is this answer correct?"
-                      value={newExplanation}
-                      onChange={(e) => setNewExplanation(e.target.value)}
-                      className="w-full bg-slate-950 border border-slate-800 rounded-xl p-2.5 text-white"
-                    />
-                  </div>
-                </div>
+                ))}
               </div>
 
               <div className="flex items-center justify-end space-x-3 pt-4 border-t border-slate-800">
@@ -468,7 +615,7 @@ export const QuizPage: React.FC = () => {
                   type="submit"
                   className="px-6 py-2.5 bg-emerald-600 hover:bg-emerald-500 font-bold rounded-xl text-white shadow-lg shadow-emerald-500/20"
                 >
-                  Publish Quiz to Database
+                  Publish Quiz to Module
                 </button>
               </div>
             </form>
