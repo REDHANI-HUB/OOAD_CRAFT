@@ -20,6 +20,7 @@ import {
 const navItems = [
   { name: 'Dashboard', path: '/dashboard', icon: LayoutDashboard },
   { name: 'Learning Modules', path: '/learn', icon: BookOpen },
+  { name: 'Module Quizzes', path: '/quiz', icon: Award },
   { name: 'Interactive UML Lab', path: '/uml-lab', icon: Code },
   { name: 'Req-to-UML Parser', path: '/req-parser', icon: Sparkles },
   { name: 'Design Challenges', path: '/challenges', icon: Target },

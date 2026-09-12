@@ -58,7 +58,10 @@ export const App: React.FC = () => {
               <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
               <Route path="/learn" element={<ProtectedRoute><LearningModulesPage /></ProtectedRoute>} />
               <Route path="/lessons/:id" element={<ProtectedRoute><LessonDetailPage /></ProtectedRoute>} />
-              <Route path="/practice" element={<ProtectedRoute><PracticePage /></ProtectedRoute>} />
+              <Route path="/quiz" element={<ProtectedRoute><QuizPage /></ProtectedRoute>} />
+              <Route path="/quiz/:id" element={<ProtectedRoute><QuizPage /></ProtectedRoute>} />
+              <Route path="/quiz/module/:moduleId" element={<ProtectedRoute><QuizPage /></ProtectedRoute>} />
+              <Route path="/quizzes" element={<ProtectedRoute><QuizPage /></ProtectedRoute>} />
               <Route path="/quizzes/:id" element={<ProtectedRoute><QuizPage /></ProtectedRoute>} />
               <Route path="/quizzes/module/:moduleId" element={<ProtectedRoute><QuizPage /></ProtectedRoute>} />
               <Route path="/uml-lab" element={<ProtectedRoute><UMLLabPage /></ProtectedRoute>} />
