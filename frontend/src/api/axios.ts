@@ -1,11 +1,11 @@
 import axios from 'axios';
 
 const getBaseUrl = () => {
-  const envUrl = import.meta.env.VITE_API_URL;
-  if (envUrl) return envUrl;
   if (typeof window !== 'undefined' && window.location.hostname !== 'localhost' && window.location.hostname !== '127.0.0.1') {
     return 'https://types-menu-reasons-butterfly.trycloudflare.com/api';
   }
+  const envUrl = import.meta.env.VITE_API_URL;
+  if (envUrl) return envUrl;
   return 'http://localhost:8080/api';
 };
 
