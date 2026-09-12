@@ -19,25 +19,21 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const refreshUser = async () => {
     try {
+      const token = localStorage.getItem('jwt_token');
+      if (!token) {
+        setUser(null);
+        return;
+      }
       const u = await authApi.me();
       if (u) {
         setUser(u);
-      }
-    } catch {
-      const token = localStorage.getItem('jwt_token');
-      if (token) {
-        setUser({
-          id: 1,
-          email: 'student@ooadcraft.edu',
-          name: 'Student Architect',
-          university: 'State University',
-          department: 'Computer Science',
-          batchYear: 2026,
-          role: 'ROLE_STUDENT',
-        });
       } else {
+        localStorage.removeItem('jwt_token');
         setUser(null);
       }
+    } catch {
+      localStorage.removeItem('jwt_token');
+      setUser(null);
     } finally {
       setLoading(false);
     }
@@ -48,26 +44,20 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = async (credentials: any) => {
-    try {
-      const res = await authApi.login(credentials);
+    const res = await authApi.login(credentials);
+    if (res && res.user) {
       setUser(res.user);
-    } catch (err: any) {
-      if (!err.response) {
-        throw new Error('Backend API server is unreachable. Ensure your Spring Boot backend & MySQL DB are running.');
-      }
-      throw err;
+    } else {
+      throw new Error('Invalid email or password');
     }
   };
 
   const register = async (data: any) => {
-    try {
-      const res = await authApi.register(data);
+    const res = await authApi.register(data);
+    if (res && res.user) {
       setUser(res.user);
-    } catch (err: any) {
-      if (!err.response) {
-        throw new Error('Backend API server is unreachable. Ensure your Spring Boot backend & MySQL DB are running.');
-      }
-      throw err;
+    } else {
+      throw new Error('Registration failed');
     }
   };
 
@@ -75,7 +65,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await authApi.logout();
     } catch (e) {
-      console.warn('Backend logout call skipped/failed:', e);
+      console.warn('Backend logout call:', e);
     } finally {
       localStorage.removeItem('jwt_token');
       setUser(null);
