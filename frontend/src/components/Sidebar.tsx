@@ -41,29 +41,68 @@ const navItems = [
 export const Sidebar: React.FC = () => {
   return (
     <aside className="hidden md:flex w-64 shrink-0 bg-white dark:bg-slate-900 border-r border-slate-200 dark:border-slate-800 sticky top-16 h-[calc(100vh-4rem)] p-4 flex-col justify-between transition-colors overflow-y-auto scrollbar-thin">
-      <div className="space-y-1">
-        <div className="px-3 py-2 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
+      <div className="space-y-3">
+        <div className="px-3 py-1 text-xs font-bold uppercase tracking-wider text-slate-400 dark:text-slate-500">
           Core Platform
         </div>
-        {navItems.map((item) => {
-          const Icon = item.icon;
-          return (
-            <NavLink
-              key={item.path}
-              to={item.path}
-              className={({ isActive }) =>
-                `flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
-                  isActive
-                    ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-semibold shadow-sm'
-                    : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100'
-                }`
-              }
+
+        {/* Developer Self Credit Card - Top Pinned */}
+        <div className="mx-1 p-3 bg-gradient-to-br from-indigo-500/10 via-slate-50 to-purple-500/10 dark:from-indigo-950/60 dark:via-slate-900 dark:to-slate-800 border border-indigo-200 dark:border-indigo-800/60 rounded-2xl space-y-1.5 shadow-sm">
+          <div className="flex items-center space-x-1.5 text-[10px] font-black uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
+            <UserCheck className="w-3.5 h-3.5 shrink-0" />
+            <span>Created By</span>
+          </div>
+          <div>
+            <div className="font-extrabold text-xs text-slate-900 dark:text-white">
+              Redhani Chelladurai
+            </div>
+            <div className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-300 mt-0.5 leading-tight">
+              Department Of Information Technology
+            </div>
+          </div>
+          <div className="flex items-center space-x-3 pt-1 border-t border-slate-200/60 dark:border-slate-800 text-slate-600 dark:text-slate-400">
+            <a
+              href="https://github.com/REDHANI-HUB"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-indigo-600 dark:hover:text-indigo-400 transition inline-flex items-center space-x-1 text-[11px] font-bold text-slate-700 dark:text-slate-300"
             >
-              <Icon className="w-4 h-4 shrink-0" />
-              <span>{item.name}</span>
-            </NavLink>
-          );
-        })}
+              <Github className="w-3.5 h-3.5" />
+              <span>GitHub</span>
+            </a>
+            <a
+              href="https://www.linkedin.com/in/redhani-chelladurai-884a87324/"
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-indigo-600 dark:hover:text-indigo-400 transition inline-flex items-center space-x-1 text-[11px] font-bold text-slate-700 dark:text-slate-300"
+            >
+              <Linkedin className="w-3.5 h-3.5" />
+              <span>LinkedIn</span>
+            </a>
+          </div>
+        </div>
+
+        <div className="space-y-1 pt-1">
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            return (
+              <NavLink
+                key={item.path}
+                to={item.path}
+                className={({ isActive }) =>
+                  `flex items-center space-x-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                    isActive
+                      ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 font-semibold shadow-sm'
+                      : 'text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-slate-100'
+                  }`
+                }
+              >
+                <Icon className="w-4 h-4 shrink-0" />
+                <span>{item.name}</span>
+              </NavLink>
+            );
+          })}
+        </div>
       </div>
 
       <div className="pt-3 space-y-3 border-t border-slate-200 dark:border-slate-800">
