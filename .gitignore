@@ -6,3 +6,7 @@ backend/target/
 *.log
 dist/
 frontend/dist/
+
+cloudflared.exe
+lt.log
+tunnel_out.txt
