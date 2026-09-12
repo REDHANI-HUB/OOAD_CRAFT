@@ -22,6 +22,8 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  config.headers['Bypass-Tunnel-Remainder'] = 'true';
+  config.headers['ngrok-skip-browser-warning'] = 'true';
   return config;
 });
 
