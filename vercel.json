@@ -4,7 +4,7 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://ooadcraft-api.loca.lt/api/:path*"
+      "destination": "https://ea0aab7eb93caa.lhr.life/api/:path*"
     },
     {
       "source": "/(.*)",
